@@ -7,9 +7,11 @@ export default defineConfig(({ mode }) => {
   // Using '.' instead of process.cwd() to avoid TS error about missing types for process.cwd()
   const env = loadEnv(mode, '.', '');
   
-  // On Vercel, system env vars (like API_KEY) are available in process.env.
-  // loadEnv loads from .env files. We combine them to ensure we catch the key.
-  const apiKey = process.env.API_KEY || env.API_KEY;
+  // Logic to resolve the API Key:
+  // 1. process.env.API_KEY: Set in Vercel Dashboard (Production)
+  // 2. env.API_KEY: Standard .env file
+  // 3. env.GEMINI_API_KEY: Specific local dev key requested (.env.local)
+  const apiKey = process.env.API_KEY || env.API_KEY || env.GEMINI_API_KEY;
 
   return {
     plugins: [react()],
