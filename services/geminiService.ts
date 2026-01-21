@@ -39,6 +39,13 @@ export const initializeChat = (): Chat => {
     model: 'gemini-3-flash-preview',
     config: {
       systemInstruction: SYSTEM_INSTRUCTION,
+      // permissive safety settings to prevent silent blocking of "Heat Warning" topics
+      safetySettings: [
+        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+      ],
     },
   });
   return chatInstance;
@@ -90,10 +97,25 @@ ${historyLog}
       message: prompt
     });
     
-    return response.text || "I'm listening, but I couldn't formulate a response right now.";
+    // Check for valid text
+    if (response.text) {
+      return response.text;
+    }
+
+    // Fallback: Check if there was a finish reason (e.g. Safety Block)
+    console.warn("Gemini Response Empty. Full Response Object:", response);
+    
+    if (response.candidates && response.candidates.length > 0) {
+      const firstCandidate = response.candidates[0];
+      if (firstCandidate.finishReason && firstCandidate.finishReason !== 'STOP') {
+        return `[SYSTEM ALERT] The AI response was blocked. Reason: ${firstCandidate.finishReason}`;
+      }
+    }
+
+    return "I received your message, but the system returned an empty response without an error code.";
   } catch (error) {
     console.error("Gemini API Error:", error);
-    // Reset instance in case it was a transient auth error that might be fixed by re-init (unlikely but safe)
+    // Reset instance in case it was a transient auth error
     chatInstance = null; 
     aiInstance = null;
     return "I am unable to connect to the AI network. Please check the system configuration (API Key).";
