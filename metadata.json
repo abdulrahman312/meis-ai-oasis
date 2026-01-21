@@ -1,0 +1,5 @@
+{
+  "name": "Riyadh AI-Oasis",
+  "description": "A real-time environmental monitoring dashboard for Saudi agriculture, featuring a live connection to sensor data and an expert AI agricultural scientist chatbot.",
+  "requestFramePermissions": []
+}
