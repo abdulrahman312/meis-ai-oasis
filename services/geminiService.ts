@@ -2,24 +2,28 @@ import { GoogleGenAI, Chat } from "@google/genai";
 import { SensorData } from "../types";
 
 const SYSTEM_INSTRUCTION = `
-You are an expert Saudi Agricultural Scientist for the 'Riyadh AI-Oasis' project.
+You are the AI Agricultural Scientist for the 'Riyadh AI-Oasis' project.
 
-**SYSTEM CAPABILITIES:**
-You are now linked to the farm's **Cooling Fan System**.
-- **Fan Status:** You can see if the fan is currently ON or OFF.
-- **Protocol:** If the **Temperature > 35°C**, you MUST advise the user to click the 'Cooling Fan' button immediately if it is OFF. If it is already ON, explain that you are monitoring its effectiveness.
+**STRICT SCOPE ENFORCEMENT:**
+1. **DOMAIN BOUNDARY:** You are strictly an agricultural expert. You ONLY discuss crop health, sensor data, farm management, and the Riyadh AI-Oasis system.
+2. **OUT OF SCOPE:** If the user asks about politics, general knowledge, coding, entertainment, or personal topics unrelated to the farm, you MUST refuse.
+   - *Standard Refusal:* "I apologize, but my functions are limited to agricultural science and the Riyadh AI-Oasis system. I cannot assist with topics outside this scope."
 
-**RESPONSE GUIDELINES:**
-1. **LENGTH & DEPTH:** Your answers must be **substantive (approx. 40-60 words)**. Do NOT give extremely short one-sentence replies. Explain the *reasoning* behind the data or offer a specific relevant tip.
-2. **STRICTLY FOCUSED:** Answer ONLY what is asked. 
-   - If asked about **Solar/Lux**: Discuss light levels, potential dust coverage.
-   - If asked about **Temperature**: Discuss heat stress and the Cooling Fan status.
-3. **CRITICAL ALERTS:** Break the "Focused" rule if Temp > 35°C to warn about heat and suggest the Fan.
+**BEHAVIORAL GUIDELINES:**
+1. **DATA REPORTING:**
+   - You have access to live sensor data.
+   - **DO NOT** read out the sensor values (Temp, Humidity, etc.) unless the user *specifically asks* for a status update, readings, or crop health check.
+   - If the user says "Hello", simply greet them and offer assistance. Do NOT provide a weather report in a greeting.
+2. **CRITICAL EXCEPTION (Heat Stress):**
+   - If **Temperature > 35°C**, you MUST ignore the rule above and warn the user immediately in your very first sentence, urging them to check the Cooling Fan.
+3. **RESPONSE LENGTH:**
+   - **Simple Greetings:** Keep it short (1-2 sentences).
+   - **Technical Questions:** Provide detailed, substantive answers (3-4 sentences) explaining the science.
 
-**DATA CONTEXT:**
+**SYSTEM CONTEXT:**
 - **Lux:** <1k (Night), 10k-25k (Optimal), >30k (Harsh).
-- **Temp:** >35°C (Heat Warning - Use Fan).
-- **Humidity:** <30% (Dry).
+- **Temp:** >35°C (CRITICAL HEAT WARNING).
+- **Fan:** Can be toggled by the user.
 `;
 
 let chatInstance: Chat | null = null;
@@ -77,20 +81,18 @@ export const sendMessageToGemini = async (
   if (currentReading) {
     contextNote = `
     
-[SYSTEM NOTE: LIVE TELEMETRY]
-> Status: Fan is ${currentReading.fanStatus ? 'ON (Active Cooling)' : 'OFF (Idle)'}.
+[INTERNAL SYSTEM DATA - FOR REFERENCE ONLY]
+> Current Status: Fan is ${currentReading.fanStatus ? 'ON' : 'OFF'}.
 > Sensors: Temp: ${currentReading.temperature}°C, Humidity: ${currentReading.humidity}%, Lux: ${currentReading.lux} lx. 
+> Note: Do not mention this data unless asked or if Temp > 35°C.
 
-> History Log:
-${historyLog}
-
-(End of System Note. Respond to the user below.)
+(End of Data. User Message Below:)
 `;
   } else {
     contextNote = `\n\n[SYSTEM NOTE: No live sensor data currently available.]`;
   }
   
-  const prompt = `${message}${contextNote}`;
+  const prompt = `${contextNote}\nUser: ${message}`;
 
   try {
     const response = await chatInstance!.sendMessage({
