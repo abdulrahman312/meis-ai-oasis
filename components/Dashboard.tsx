@@ -16,13 +16,9 @@ const Dashboard: React.FC<DashboardProps> = ({ latestData, status, lastUpdated }
   const hum = latestData?.humidity ?? 0;
   const lux = latestData?.lux ?? 0;
   
-  // Local state for optimistic UI updates
   const [localFanStatus, setLocalFanStatus] = useState(false);
-  // Timestamp of last user interaction to prevent "flicker" from old polled data
   const [lastInteractionTime, setLastInteractionTime] = useState(0);
 
-  // Sync local state with real data whenever data refreshes, 
-  // BUT only if we haven't interacted recently (grace period of 5 seconds)
   useEffect(() => {
     const timeSinceInteraction = Date.now() - lastInteractionTime;
     if (latestData && timeSinceInteraction > 5000) {
@@ -31,131 +27,140 @@ const Dashboard: React.FC<DashboardProps> = ({ latestData, status, lastUpdated }
   }, [latestData, lastInteractionTime]);
 
   const handleFanToggle = async () => {
-    // 1. Optimistic Update (Switch UI immediately)
     const newStatus = !localFanStatus;
     setLocalFanStatus(newStatus);
-    setLastInteractionTime(Date.now()); // Set debounce timestamp
+    setLastInteractionTime(Date.now()); 
     
-    // 2. Send Command
     const success = await toggleFanControl(newStatus);
     
-    // 3. Rollback if failed
     if (!success) {
       setLocalFanStatus(!newStatus);
-      // Reset interaction time so next poll can sync
       setLastInteractionTime(0);
-      alert("Failed to connect to Control Node. Please check connection.");
+      alert("Failed to connect to Control Node.");
     }
   };
 
-  const getLuxColor = (val: number) => {
-    if (val < 1000) return '#9ca3af'; 
-    if (val >= 10000 && val <= 25000) return '#facc15'; 
-    if (val > 30000) return '#ea580c'; 
-    return '#e8d5b5'; 
+  // VIBRANT NEON COLORS
+  const getColor = (val: number, type: 'temp' | 'hum' | 'lux') => {
+    // Colors chosen for high contrast "Neon" look against light background
+    if (type === 'temp') return val > 35 ? '#FF0033' : '#FF6600'; // Neon Red (Alert) / Neon Orange (Normal)
+    if (type === 'hum') return '#00C2CB'; // Neon Cyan/Teal
+    if (type === 'lux') return '#FFB300'; // Neon Gold/Amber
+    return '#2D2424';
   };
 
   return (
-    <div className="flex flex-col h-full space-y-6">
-      {/* Header Area */}
-      <div className="bg-oasis-surface border-b border-oasis-neon/30 p-6 flex justify-between items-center shadow-lg">
+    <div className="flex flex-col h-full justify-between gap-10">
+      
+      {/* Dashboard Header */}
+      <div className="flex items-end justify-between border-b-2 border-sadu-sand/30 pb-6">
         <div>
-          <h2 className="text-3xl font-bold text-oasis-neon tracking-tighter drop-shadow-md">
-            SYSTEM STATUS
-          </h2>
-          <div className="flex items-center mt-2 space-x-2">
-            <span className="text-oasis-sandDark text-sm font-mono">LINK:</span>
-            <span className={`text-xs font-bold px-2 py-0.5 rounded ${
-              status === ConnectionStatus.CONNECTED ? 'bg-green-900 text-green-400' : 'bg-red-900 text-red-400'
-            }`}>
-              {status}
-            </span>
-            <span className="text-oasis-sandDark text-xs ml-4">
-              LAST SYNC: {lastUpdated ? lastUpdated.toLocaleTimeString() : '--:--:--'}
-            </span>
+          <h2 className="text-4xl md:text-5xl font-black text-sadu-dark tracking-tight">System Overview</h2>
+          <div className="flex items-center gap-3 mt-3">
+             <div className={`w-3 h-3 rounded-full ${status === ConnectionStatus.CONNECTED ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500'}`}></div>
+             <span className="text-base font-bold text-gray-500 uppercase tracking-widest">
+               {status === ConnectionStatus.CONNECTED ? 'Live Monitoring Active' : 'Connecting to Node...'}
+             </span>
           </div>
         </div>
-        
-        {latestData && (
-          <div className="text-right">
-             <div className="text-xs text-oasis-sandDark uppercase">Sensor Timestamp</div>
-             <div className="text-lg text-oasis-sand font-mono">{latestData.timestamp}</div>
-          </div>
-        )}
+        <div className="text-right hidden md:block">
+          <p className="text-sm text-gray-400 font-bold uppercase tracking-wider mb-1">Last Sync</p>
+          <p className="text-3xl font-mono text-sadu-oasis font-bold">
+            {lastUpdated ? lastUpdated.toLocaleTimeString() : '--:--:--'}
+          </p>
+        </div>
       </div>
 
-      {/* Main Grid: Gauges & Controls */}
-      <div className="flex-1 p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
-        
-        {/* Temp Gauge */}
-        <Gauge 
-          value={temp} 
-          min={0} 
-          max={60} 
-          label="Temperature" 
-          unit="°C" 
-          color="#ff5e00" 
-        />
-        
-        {/* Humidity Gauge */}
-        <Gauge 
-          value={hum} 
-          min={0} 
-          max={100} 
-          label="Humidity" 
-          unit="%" 
-          color="#00e5ff" 
-        />
-        
-        {/* Lux Gauge (Updated) */}
-        <Gauge 
-          value={lux} 
-          min={0} 
-          max={70000} 
-          label="Solar Intensity" 
-          unit="lx" 
-          color={getLuxColor(lux)} 
-        />
-
-        {/* Fan Control Card */}
-        <div className="flex flex-col items-center justify-center p-6 bg-oasis-surface/50 border border-oasis-neon/20 rounded-xl backdrop-blur-sm shadow-[0_0_15px_rgba(0,255,157,0.1)] h-[216px] relative overflow-hidden group">
-          <h3 className="text-xl font-bold text-oasis-sand tracking-widest uppercase mb-4 z-10">Cooling Fan</h3>
+      {/* Massive Floating Gauges Grid */}
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-12 items-center text-center">
           
-          <div className={`mb-6 p-4 rounded-full border-2 transition-all duration-500 z-10 ${
-            localFanStatus 
-              ? 'border-oasis-neon bg-oasis-neon/10 shadow-[0_0_30px_#00ff9d]' 
-              : 'border-red-900/50 bg-red-900/10'
-          }`}>
+          {/* Temperature */}
+          <div className="flex flex-col items-center justify-center h-full">
+             <Gauge 
+               value={temp} 
+               min={0} 
+               max={60} 
+               label="Temperature" 
+               unit="°C" 
+               color={getColor(temp, 'temp')} 
+               scale={1.5} // Increased Size
+             />
+             {temp > 35 && (
+               <span className="mt-4 text-sm font-bold text-white bg-[#FF0033] px-4 py-2 rounded-full animate-pulse shadow-lg">
+                 HIGH HEAT WARNING
+               </span>
+             )}
+          </div>
+
+          {/* Humidity */}
+          <div className="flex flex-col items-center justify-center h-full">
+             <Gauge 
+               value={hum} 
+               min={0} 
+               max={100} 
+               label="Humidity" 
+               unit="%" 
+               color={getColor(hum, 'hum')} 
+               scale={1.5} // Increased Size
+             />
+          </div>
+
+          {/* Lux */}
+          <div className="flex flex-col items-center justify-center h-full">
+             <Gauge 
+               value={lux} 
+               min={0} 
+               max={70000} 
+               label="Sunlight" 
+               unit="lx" 
+               color={getColor(lux, 'lux')} 
+               scale={1.5} // Increased Size
+             />
+          </div>
+
+        </div>
+      </div>
+
+      {/* Large Control Bar */}
+      <div className="bg-white/50 backdrop-blur-sm rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 border border-sadu-sand shadow-lg mt-auto">
+        
+        <div className="flex items-center gap-6">
+          <div 
+            className={`p-5 rounded-full transition-all duration-500 flex items-center justify-center ${localFanStatus ? 'bg-black shadow-[0_0_20px_rgba(0,255,153,0.4)] border border-[#00FF99]' : 'bg-gray-100 text-gray-300'}`}
+          >
+            {/* Fan Icon with Neon Glow when active */}
             <Fan 
-              size={48} 
-              className={`transition-all duration-1000 ${
-                localFanStatus ? 'text-oasis-neon animate-[spin_1s_linear_infinite]' : 'text-red-900'
-              }`} 
+              className={`w-12 h-12 ${localFanStatus ? 'animate-spin' : ''}`} 
+              color={localFanStatus ? '#00FF99' : 'currentColor'} // Neon Green
+              style={localFanStatus ? { filter: 'drop-shadow(0 0 8px #00FF99)' } : {}}
             />
           </div>
-
-          <button 
-            onClick={handleFanToggle}
-            className={`flex items-center gap-2 px-6 py-2 rounded font-bold font-mono text-sm transition-all z-10 ${
-              localFanStatus
-                ? 'bg-oasis-neon text-oasis-dark hover:bg-white hover:scale-105'
-                : 'bg-red-900/30 text-red-400 hover:bg-red-900/50 border border-red-900'
-            }`}
-          >
-            <Power size={16} />
-            {localFanStatus ? 'SYSTEM ACTIVE' : 'SYSTEM OFF'}
-          </button>
-
-          {/* Background Pulse Effect when ON */}
-          {localFanStatus && (
-            <div className="absolute inset-0 bg-oasis-neon/5 animate-pulse z-0"></div>
-          )}
+          <div>
+            <h3 className="font-bold text-2xl text-sadu-dark">Climate Control Unit</h3>
+            <p className="text-base text-gray-600 mt-1">
+              {localFanStatus 
+                ? 'Active cooling enabled. Regulating greenhouse temperature.' 
+                : 'System in standby. Passive cooling only.'}
+            </p>
+          </div>
         </div>
 
-      </div>
+        <button
+          onClick={handleFanToggle}
+          className={`
+            relative overflow-hidden px-12 py-5 rounded-2xl font-black text-lg uppercase tracking-widest transition-all shadow-xl hover:shadow-2xl active:scale-95
+            ${localFanStatus 
+              ? 'bg-[#FF0033] text-white hover:bg-red-700' 
+              : 'bg-white text-sadu-dark border-2 border-gray-200 hover:border-sadu-oasis hover:text-sadu-oasis'}
+          `}
+        >
+          <div className="flex items-center gap-3 relative z-10">
+            <Power size={24} strokeWidth={3} />
+            <span>{localFanStatus ? 'STOP SYSTEM' : 'ACTIVATE'}</span>
+          </div>
+        </button>
 
-      <div className="p-4 text-center text-xs text-oasis-sandDark/50 font-mono">
-        RIYADH AI-OASIS MONITORING NODE // V.1.2.0 // FAN CONTROL ENABLED
       </div>
     </div>
   );

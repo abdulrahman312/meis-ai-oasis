@@ -18,7 +18,6 @@ const App: React.FC = () => {
         setLastUpdated(new Date());
       } else {
         console.warn("Fetched empty data set");
-        // Don't set error immediately on empty, might be just new sheet
       }
     } catch (e) {
       console.error(e);
@@ -38,60 +37,91 @@ const App: React.FC = () => {
   const latestData = data.length > 0 ? data[data.length - 1] : null;
 
   return (
-    <div className="min-h-screen bg-[url('https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?q=80&w=2574&auto=format&fit=crop')] bg-cover bg-center">
-      <div className="absolute inset-0 bg-oasis-dark/90 pointer-events-none"></div>
-
-      <div className="relative z-10 flex flex-col h-screen overflow-hidden">
-        <header className="h-16 border-b border-oasis-neon/30 bg-oasis-surface/90 backdrop-blur-md flex items-center px-6 justify-between shrink-0">
-          <div className="flex items-center gap-3">
-             <div className="w-3 h-3 bg-oasis-neon rounded-full shadow-[0_0_10px_#00ff9d]"></div>
-             <h1 className="text-2xl font-bold tracking-widest text-oasis-sand">
-               RIYADH <span className="text-oasis-neon">AI-OASIS</span>
-             </h1>
-          </div>
-          <div className="hidden md:block text-xs font-mono text-oasis-sandDark">
-             AGRICULTURAL INTELLIGENCE UNIT
-          </div>
-        </header>
-
-        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-          <main className="flex-1 overflow-y-auto lg:overflow-hidden p-4 lg:p-8">
-            <div className="h-full max-w-6xl mx-auto bg-black/20 border border-white/5 rounded-2xl backdrop-blur-sm overflow-hidden flex flex-col">
-              <Dashboard 
-                latestData={latestData} 
-                status={status} 
-                lastUpdated={lastUpdated} 
+    <div className="min-h-screen gradient-bg flex flex-col font-cairo">
+      
+      {/* HEADER */}
+      <header className="bg-white/90 backdrop-blur-md shadow-sm sadu-border z-50 sticky top-0">
+        <div className="max-w-[1920px] mx-auto px-4 lg:px-8">
+          <div className="flex flex-col lg:flex-row items-center justify-between py-4 gap-4 lg:gap-0">
+            
+            {/* LEFT: New Logo (Ataa) */}
+            <div className="lg:w-1/4 flex justify-center lg:justify-start">
+              <img 
+                 src="https://i.ibb.co/60j7zv2f/ataa-preview.png"
+                 alt="Ataa Logo"
+                 className="h-20 lg:h-28 w-auto object-contain drop-shadow-sm"
               />
-              
-              {/* Log Section */}
-              <div className="flex-1 p-6 hidden lg:block overflow-y-auto custom-scrollbar">
-                 <h3 className="text-oasis-sandDark mb-4 text-sm font-bold uppercase border-b border-white/10 pb-2">Recent Log Entries</h3>
-                 <div className="space-y-2">
-                    {data.slice().reverse().slice(0, 5).map((row, idx) => (
-                      <div key={idx} className="flex justify-between text-sm font-mono p-2 hover:bg-white/5 rounded transition-colors text-gray-400">
-                        <span className="w-20">{row.timestamp}</span>
-                        <div className="flex space-x-4 items-center">
-                          <span className={row.temperature > 30 ? 'text-orange-400' : 'text-emerald-400'}>
-                            {row.temperature}°C
-                          </span>
-                          <span className="text-cyan-400">{row.humidity}%</span>
-                          <span className="text-yellow-400 w-20 text-right">{row.lux} lx</span>
-                          <span className={`w-16 text-center text-xs px-2 py-0.5 rounded ${row.fanStatus ? 'bg-green-900 text-green-400' : 'bg-red-900/20 text-red-500'}`}>
-                            {row.fanStatus ? 'FAN ON' : 'FAN OFF'}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+            </div>
+
+            {/* CENTER: School Identity (Logo Left + Text Right) */}
+            <div className="flex-1 flex flex-row items-center justify-center gap-6 text-center px-2">
+              <img 
+                src="https://i.ibb.co/bgFrgXkW/meis.png" 
+                alt="MEIS Logo" 
+                className="h-20 lg:h-24 w-auto object-contain drop-shadow-sm" 
+              />
+              <div className="flex flex-col items-center lg:items-start">
+                <h1 className="text-2xl lg:text-3xl font-black leading-tight animate-sadu-glow whitespace-nowrap">
+                  مدرسة الشرق الأوسط العالمية - المروج
+                </h1>
+                <h2 className="text-sm lg:text-base text-sadu-oasis font-bold tracking-wide mt-1">
+                  Middle East International School - AlMuruj
+                </h2>
+              </div>
+            </div>
+
+            {/* RIGHT: Project Identity */}
+            <div className="lg:w-1/4 flex justify-center lg:justify-end">
+              <div className="flex items-center gap-3 bg-white/50 px-6 py-3 rounded-full border border-sadu-sand shadow-sm transition-transform hover:scale-105">
+                 <div className="w-3 h-3 bg-sadu-oasis rounded-full animate-pulse shadow-[0_0_10px_rgba(0,107,95,0.4)]"></div>
+                 <div className="flex flex-col items-start">
+                   <h3 className="text-lg font-black tracking-widest text-sadu-dark leading-none">
+                     RIYADH <span className="text-sadu-red">AI-OASIS</span>
+                   </h3>
+                   <span className="text-[10px] text-gray-500 font-bold tracking-widest uppercase">
+                     Agricultural Intelligence Unit
+                   </span>
                  </div>
               </div>
             </div>
-          </main>
 
-          <aside className="w-full lg:w-[400px] xl:w-[450px] border-l border-oasis-neon/20 h-[50vh] lg:h-auto flex flex-col shadow-2xl z-20">
-             <ChatWindow historyData={data} />
-          </aside>
-
+          </div>
         </div>
+      </header>
+
+      {/* MAIN CONTENT GRID */}
+      <div className="flex-1 max-w-[1920px] mx-auto w-full p-4 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* LEFT: CHAT (Sticky, 3 Columns) */}
+        <aside className="lg:col-span-3 hidden lg:block h-[calc(100vh-160px)] sticky top-36">
+           <div className="h-full bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl shadow-sadu-sand/20 overflow-hidden border border-white flex flex-col">
+             <ChatWindow historyData={data} />
+           </div>
+        </aside>
+
+        {/* Mobile Chat View (Stacked) */}
+        <div className="lg:hidden h-[500px]">
+           <div className="h-full bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden border border-white flex flex-col">
+             <ChatWindow historyData={data} />
+           </div>
+        </div>
+
+        {/* RIGHT: DASHBOARD (9 Columns) - Expanded Size */}
+        <main className="lg:col-span-9 flex flex-col h-full">
+          <div className="flex-1 bg-white/60 backdrop-blur-md rounded-3xl shadow-2xl shadow-sadu-sand/20 overflow-hidden border border-white/50 p-6 lg:p-10 relative flex flex-col justify-center">
+            
+            {/* Background Texture for visual depth */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-sadu-sand/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-sadu-oasis/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
+
+            <Dashboard 
+              latestData={latestData} 
+              status={status} 
+              lastUpdated={lastUpdated} 
+            />
+          </div>
+        </main>
+
       </div>
     </div>
   );

@@ -2,28 +2,58 @@ import { GoogleGenAI, Chat, HarmCategory, HarmBlockThreshold } from "@google/gen
 import { SensorData } from "../types";
 
 const SYSTEM_INSTRUCTION = `
-You are the AI Agricultural Scientist for the 'Riyadh AI-Oasis' project.
+You are the AI Agricultural Scientist for the 'Riyadh AI-Oasis'.
 
-**STRICT SCOPE ENFORCEMENT:**
-1. **DOMAIN BOUNDARY:** You are strictly an agricultural expert. You ONLY discuss crop health, sensor data, farm management, and the Riyadh AI-Oasis system.
-2. **OUT OF SCOPE:** If the user asks about politics, general knowledge, coding, entertainment, or personal topics unrelated to the farm, you MUST refuse.
-   - *Standard Refusal:* "I apologize, but my functions are limited to agricultural science and the Riyadh AI-Oasis system. I cannot assist with topics outside this scope."
+**CORE DIRECTIVE: RESPONSE FORMATTING**
+You MUST respond using **HTML tags** for all formatting. Do NOT use markdown (no ** or ##).
+Your goal is to provide data that is visually structured and easy to read.
 
-**BEHAVIORAL GUIDELINES:**
-1. **DATA REPORTING:**
-   - You have access to live sensor data.
-   - **DO NOT** read out the sensor values (Temp, Humidity, etc.) unless the user *specifically asks* for a status update, readings, or crop health check.
-   - If the user says "Hello", simply greet them and offer assistance. Do NOT provide a weather report in a greeting.
-2. **CRITICAL EXCEPTION (Heat Stress):**
-   - If **Temperature > 35°C**, you MUST ignore the rule above and warn the user immediately in your very first sentence, urging them to check the Cooling Fan.
-3. **RESPONSE LENGTH:**
-   - **Simple Greetings:** Keep it short (1-2 sentences).
-   - **Technical Questions:** Provide detailed, substantive answers (3-4 sentences) explaining the science.
+**HTML STYLE GUIDE:**
+- **Paragraphs:** Use \`<p>\`.
+- **Lists:** Use \`<ul>\` and \`<li>\`.
+- **Tables:** Use \`<table>\`, \`<thead>\`, \`<tbody>\`, \`<tr>\`, \`<th>\`, \`<td>\`.
+- **Emphasis:** Use \`<strong>\` (renders as Neon Green).
+- **Line Breaks:** Use \`<br>\`.
+- **No Outer Wrappers:** Do not wrap the response in \`<html>\` or \`<body>\`. Just return the inner elements.
 
-**SYSTEM CONTEXT:**
-- **Lux:** <1k (Night), 10k-25k (Optimal), >30k (Harsh).
-- **Temp:** >35°C (CRITICAL HEAT WARNING).
-- **Fan:** Can be toggled by the user.
+**LOGIC FOR RESPONSE LENGTH & STRUCTURE:**
+
+1.  **SCENARIO: STATUS CHECK / "HOW IS THE FARM?"**
+    *   **Action:** You MUST create a \`<table>\` comparing current readings to optimal ranges.
+    *   **Length:** Short text summary + The Table.
+    *   **Example Output:**
+        \`\`\`html
+        <p>The farm is currently stable.</p>
+        <table>
+          <thead><tr><th>Metric</th><th>Value</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Temp</td><td>24°C</td><td>Optimal</td></tr>
+            <tr><td>Lux</td><td>15000</td><td>Good</td></tr>
+          </tbody>
+        </table>
+        \`\`\`
+
+2.  **SCENARIO: EXPLANATION / "WHY...?" / "DETAILS..."**
+    *   **Action:** Use \`<ul>\` for bullet points. Break text into multiple short \`<p>\` tags.
+    *   **Length:** Detailed and comprehensive.
+    *   **Structure:**
+        *   <p>Direct Answer/Concept</p>
+        *   <strong>Key Factors:</strong>
+        *   <ul><li>Factor 1</li><li>Factor 2</li></ul>
+        *   <p>Conclusion</p>
+
+3.  **SCENARIO: SIMPLE GREETING / "HELLO"**
+    *   **Action:** Single \`<p>\` tag.
+    *   **Content:** Polite greeting only. No data dump.
+
+**STRICT DATA & SCOPE RULES:**
+1.  **Scope:** Agriculture & System Status only.
+2.  **Data Privacy:** Do NOT read out numbers in text unless asked. Use the Table format if asked for data.
+3.  **Heat Warning:** If **Temp > 35°C**, start with: \`<p><strong>⚠️ CRITICAL WARNING: HIGH TEMPERATURE DETECTED. CHECK COOLING FAN.</strong></p>\`
+
+**SYSTEM CONTEXT (THRESHOLDS):**
+- **Lux:** <1k (Night), 10k-25k (Day/Optimal), >30k (High).
+- **Temp:** >35°C (Danger).
 `;
 
 let chatInstance: Chat | null = null;
@@ -31,7 +61,6 @@ let aiInstance: GoogleGenAI | null = null;
 
 const getAIInstance = () => {
   if (!aiInstance) {
-    // Always use process.env.API_KEY directly when initializing the client.
     aiInstance = new GoogleGenAI({ apiKey: process.env.API_KEY });
   }
   return aiInstance;
@@ -43,7 +72,6 @@ export const initializeChat = (): Chat => {
     model: 'gemini-3-flash-preview',
     config: {
       systemInstruction: SYSTEM_INSTRUCTION,
-      // permissive safety settings to prevent silent blocking of "Heat Warning" topics
       safetySettings: [
         { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
         { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
@@ -63,63 +91,53 @@ export const sendMessageToGemini = async (
     initializeChat();
   }
 
-  // 1. Get the single latest reading
   const currentReading = historyContext.length > 0 
     ? historyContext[historyContext.length - 1] 
     : null;
 
-  // 2. Get recent history
   const recentHistory = historyContext.slice(-30);
   
-  // Format history
+  // Format history for the AI to analyze trends
   const historyLog = recentHistory.map(row => 
-    `{ Time: ${row.timestamp}, T: ${row.temperature}, H: ${row.humidity}, Lux: ${row.lux}, Fan: ${row.fanStatus ? 'ON' : 'OFF'} }`
-  ).join('\n');
+    `Time:${row.timestamp}, T:${row.temperature}, H:${row.humidity}, L:${row.lux}, Fan:${row.fanStatus}`
+  ).join(' | ');
 
   let contextNote = "";
   
   if (currentReading) {
     contextNote = `
-    
-[INTERNAL SYSTEM DATA - FOR REFERENCE ONLY]
-> Current Status: Fan is ${currentReading.fanStatus ? 'ON' : 'OFF'}.
-> Sensors: Temp: ${currentReading.temperature}°C, Humidity: ${currentReading.humidity}%, Lux: ${currentReading.lux} lx. 
-> Note: Do not mention this data unless asked or if Temp > 35°C.
-
-(End of Data. User Message Below:)
+[SYSTEM DATA]
+Current: Temp=${currentReading.temperature}, Hum=${currentReading.humidity}, Lux=${currentReading.lux}, Fan=${currentReading.fanStatus}.
+History (last 30 pts): ${historyLog}
+(Use this data for tables if requested. If Temp > 35, Warn immediately.)
 `;
   } else {
-    contextNote = `\n\n[SYSTEM NOTE: No live sensor data currently available.]`;
+    contextNote = `[SYSTEM DATA] No live data available.`;
   }
   
-  const prompt = `${contextNote}\nUser: ${message}`;
+  const prompt = `${contextNote}\n\nUser Question: "${message}"`;
 
   try {
     const response = await chatInstance!.sendMessage({
       message: prompt
     });
     
-    // Check for valid text
     if (response.text) {
       return response.text;
     }
 
-    // Fallback: Check if there was a finish reason (e.g. Safety Block)
-    console.warn("Gemini Response Empty. Full Response Object:", response);
-    
     if (response.candidates && response.candidates.length > 0) {
-      const firstCandidate = response.candidates[0];
-      if (firstCandidate.finishReason && firstCandidate.finishReason !== 'STOP') {
-        return `[SYSTEM ALERT] The AI response was blocked. Reason: ${firstCandidate.finishReason}`;
-      }
+       const reason = response.candidates[0].finishReason;
+       if (reason && reason !== 'STOP') {
+         return `<p><strong>System Alert:</strong> Response blocked (${reason}).</p>`;
+       }
     }
 
-    return "I received your message, but the system returned an empty response without an error code.";
+    return "<p>System returned empty response.</p>";
   } catch (error) {
     console.error("Gemini API Error:", error);
-    // Reset instance in case it was a transient auth error
     chatInstance = null; 
     aiInstance = null;
-    return "I am unable to connect to the AI network. Please check the system configuration (API Key).";
+    return "<p><strong>Connection Error:</strong> Unable to reach AI node.</p>";
   }
 };

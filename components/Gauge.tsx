@@ -8,64 +8,117 @@ interface GaugeProps {
   label: string;
   unit: string;
   color: string;
+  scale?: number; // Added scale prop
 }
 
-const Gauge: React.FC<GaugeProps> = ({ value, min, max, label, unit, color }) => {
-  // Calculate percentage for the semi-circle
+const Gauge: React.FC<GaugeProps> = ({ value, min, max, label, unit, color, scale = 1 }) => {
   const range = max - min;
-  const normalizedValue = Math.min(Math.max(value, min), max); // Clamp
+  const normalizedValue = Math.min(Math.max(value, min), max);
   const percentage = ((normalizedValue - min) / range);
 
-  // Data for the pie chart: [Value, Remainder]
-  // We want a semi-circle, so startAngle 180, endAngle 0.
-  // However, to make the "needle" logic simple with just a filled bar,
-  // we can treat the whole 180 degrees as 100%.
-  
   const data = [
     { name: 'value', value: percentage },
     { name: 'empty', value: 1 - percentage },
   ];
 
+  // Base dimensions * scale
+  const width = 224 * scale; // Base w-56 is 14rem = 224px
+  const height = 112 * scale; // Base h-28 is 7rem = 112px
+  
+  // Font sizes scaled
+  const valSize = 2.25 * scale; // rem
+  const labelSize = 0.875 * scale; // rem
+  const minMaxLabelSize = 0.7 * scale; // rem
+
   return (
-    <div className="flex flex-col items-center justify-center p-4 bg-oasis-surface/50 border border-oasis-neon/20 rounded-xl backdrop-blur-sm shadow-[0_0_15px_rgba(0,255,157,0.1)] transition-all duration-500 hover:shadow-[0_0_20px_rgba(0,255,157,0.2)]">
-      <h3 className="text-xl font-bold text-oasis-sand tracking-widest uppercase mb-2">{label}</h3>
+    <div className="relative flex flex-col items-center justify-center" style={{ width: width }}>
+      {/* Label above - NOW NEON COLORED */}
+      <h3 
+        className="font-bold uppercase tracking-widest mb-2 transition-colors duration-300"
+        style={{ 
+          fontSize: `${labelSize}rem`,
+          color: color,
+          textShadow: `0 0 8px ${color}40` 
+        }}
+      >
+        {label}
+      </h3>
       
-      <div className="relative w-64 h-32"> {/* Height is half of width for semi-circle */}
+      <div className="relative" style={{ width: width, height: height }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
+            {/* 
+              Note: Applying direct filters to Recharts Cells can be tricky across browsers.
+              We use a slight stroke to enhance definition and rely on the color intensity.
+            */}
             <Pie
               data={data}
               cx="50%"
-              cy="100%" // Center Y at bottom
+              cy="100%"
               startAngle={180}
               endAngle={0}
-              innerRadius={80}
-              outerRadius={100}
+              innerRadius={75 * scale}
+              outerRadius={95 * scale}
               paddingAngle={0}
               dataKey="value"
               stroke="none"
+              cornerRadius={5 * scale}
             >
-              <Cell key="val" fill={color} />
-              <Cell key="empty" fill="#1f2e26" /> {/* Dark background track */}
+              {/* Colored Cell with Drop Shadow Filter for Glow */}
+              <Cell 
+                key="val" 
+                fill={color} 
+                style={{ filter: `drop-shadow(0 0 4px ${color})` }} 
+              />
+              {/* Light Gray Track for Light Mode */}
+              <Cell key="empty" fill="#E5E7EB" /> 
             </Pie>
           </PieChart>
         </ResponsiveContainer>
         
-        {/* Value Overlay */}
+        {/* Value Overlay with Text Glow */}
         <div className="absolute inset-0 flex items-end justify-center pb-0">
-          <div className="text-center mb-2">
-            <span className={`text-4xl font-mono font-bold drop-shadow-[0_0_8px_rgba(0,0,0,0.8)]`} style={{ color: color }}>
+          <div className="text-center mb-1">
+            <span 
+              className="font-black font-cairo tracking-tight leading-none transition-all duration-300" 
+              style={{ 
+                color: color, 
+                fontSize: `${valSize}rem`,
+                textShadow: `0 0 15px ${color}80` // Glow effect
+              }}
+            >
               {value}
             </span>
-            <span className="text-lg text-oasis-sandDark ml-1">{unit}</span>
+            <span 
+              className="font-semibold text-gray-400 ml-1" 
+              style={{ fontSize: `${valSize * 0.4}rem` }}
+            >
+              {unit}
+            </span>
           </div>
         </div>
-      </div>
-      
-      {/* Min/Max Labels */}
-      <div className="w-64 flex justify-between px-4 mt-2 text-xs text-oasis-sandDark font-mono">
-        <span>{min}</span>
-        <span>{max}</span>
+        
+        {/* Min Label - Inside, positioned by % to accommodate scale */}
+        <div 
+            className="absolute bottom-2 font-bold text-gray-400"
+            style={{ 
+              fontSize: `${minMaxLabelSize}rem`,
+              left: '20%' 
+            }}
+        >
+            {min}
+        </div>
+
+        {/* Max Label - Inside, positioned by % to accommodate scale */}
+        <div 
+            className="absolute bottom-2 font-bold text-gray-400"
+            style={{ 
+              fontSize: `${minMaxLabelSize}rem`,
+              right: '20%'
+            }}
+        >
+            {max}
+        </div>
       </div>
     </div>
   );

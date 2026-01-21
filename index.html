@@ -4,46 +4,189 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Riyadh AI-Oasis</title>
+    
+    <!-- Google Fonts: Cairo for a Modern Arabic/English Tech feel -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
           extend: {
             colors: {
-              oasis: {
-                dark: '#0a0f0d', // Deep dark green/black
-                sand: '#e8d5b5', // Sand
-                sandDark: '#c2a878',
-                neon: '#00ff9d', // Neon Green
-                cyan: '#00e5ff', // Neon Cyan
-                surface: '#121f18',
+              // Desert / Sadu Palette
+              sadu: {
+                bg: '#F9F7F2',       // Very light sand/off-white
+                surface: '#FFFFFF',   // Pure white for cards
+                red: '#C04A41',      // Traditional Sadu Red
+                dark: '#2D2424',     // Dark Brown/Charcoal for text
+                sand: '#E6DCC3',     // Darker sand for borders
+                gold: '#D4AF37',     // Gold
+                oasis: '#006B5F',    // Deep Teal/Green
+                accent: '#E07A5F',   // Terracotta
               }
             },
             fontFamily: {
+              cairo: ['Cairo', 'sans-serif'],
               mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', "Liberation Mono", "Courier New", 'monospace'],
-            }
+            },
+            backgroundImage: {
+              'sadu-pattern': "repeating-linear-gradient(45deg, #C04A41 0, #C04A41 10px, transparent 10px, transparent 20px), repeating-linear-gradient(-45deg, #2D2424 0, #2D2424 10px, transparent 10px, transparent 20px)",
+            },
+            animation: {
+              'gradient-x': 'gradient-x 15s ease infinite',
+            },
+            keyframes: {
+              'gradient-x': {
+                '0%, 100%': {
+                  'background-size': '200% 200%',
+                  'background-position': 'left center'
+                },
+                '50%': {
+                  'background-size': '200% 200%',
+                  'background-position': 'right center'
+                },
+              },
+            },
           }
         }
       }
     </script>
     <style>
       body {
-        background-color: #0a0f0d;
-        color: #e8d5b5;
+        background-color: #F9F7F2;
+        color: #2D2424;
+        font-family: 'Cairo', sans-serif;
       }
-      /* Custom Scrollbar for Cyber feel */
+      
+      .gradient-bg {
+        background: linear-gradient(-45deg, #F9F7F2, #E6DCC3, #fdfcf8, #faeecd);
+        background-size: 400% 400%;
+        animation: gradient-BG 15s ease infinite;
+      }
+
+      @keyframes gradient-BG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+
+      /* Glowing Sadu Text Animation */
+      @keyframes sadu-glow-text {
+        0% { 
+          color: #C04A41; /* Sadu Red */
+          text-shadow: 0 0 15px rgba(192, 74, 65, 0.6); 
+        }
+        33% { 
+          color: #006B5F; /* Sadu Oasis (Teal) */
+          text-shadow: 0 0 15px rgba(0, 107, 95, 0.6); 
+        }
+        66% { 
+          color: #D4AF37; /* Sadu Gold */
+          text-shadow: 0 0 15px rgba(212, 175, 55, 0.6); 
+        }
+        100% { 
+          color: #C04A41; /* Back to Red */
+          text-shadow: 0 0 15px rgba(192, 74, 65, 0.6); 
+        }
+      }
+
+      .animate-sadu-glow {
+        animation: sadu-glow-text 6s infinite alternate ease-in-out;
+      }
+      
+      /* Modern Sadu Stripe CSS Generator */
+      .sadu-strip {
+        background-color: #ffffff;
+        background-image: 
+          linear-gradient(90deg, transparent 50%, rgba(192, 74, 65, 0.1) 50%),
+          linear-gradient(90deg, rgba(0, 107, 95, 0.1) 50%, transparent 50%);
+        background-size: 20px 20px, 30px 30px;
+      }
+
+      .sadu-border {
+        position: relative;
+      }
+      .sadu-border::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: repeating-linear-gradient(
+          90deg,
+          #C04A41,
+          #C04A41 10px,
+          #2D2424 10px,
+          #2D2424 20px,
+          #E6DCC3 20px,
+          #E6DCC3 30px,
+          #006B5F 30px,
+          #006B5F 40px
+        );
+      }
+
+      /* Custom Scrollbar - Desert Style */
       ::-webkit-scrollbar {
         width: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: #121f18; 
+        background: #F9F7F2; 
       }
       ::-webkit-scrollbar-thumb {
-        background: #00ff9d; 
+        background: #E6DCC3; 
         border-radius: 4px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #00e5ff; 
+        background: #C04A41; 
+      }
+
+      /* Chat Message HTML Styles */
+      .chat-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0.5rem 0;
+        font-size: 0.9rem;
+        background: rgba(255, 255, 255, 0.6);
+        border: 1px solid #E6DCC3;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .chat-content th {
+        text-align: left;
+        padding: 8px;
+        background: rgba(0, 107, 95, 0.1);
+        color: #006B5F;
+        font-weight: 700;
+        border-bottom: 2px solid #E6DCC3;
+      }
+      .chat-content td {
+        padding: 8px;
+        border-bottom: 1px solid #E6DCC3;
+        color: #4A4A4A;
+      }
+      .chat-content ul {
+        list-style-type: disc;
+        padding-left: 1.5rem;
+        margin: 0.5rem 0;
+        color: #2D2424;
+      }
+      .chat-content li {
+        margin-bottom: 0.25rem;
+      }
+      .chat-content strong {
+        color: #C04A41; /* Sadu Red for emphasis */
+        font-weight: 800;
+      }
+      .chat-content p {
+        margin-bottom: 0.5rem;
+        line-height: 1.6;
+      }
+      .chat-content p:last-child {
+        margin-bottom: 0;
       }
     </style>
   <script type="importmap">
