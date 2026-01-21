@@ -91,13 +91,30 @@ const parseCSV = (csvText: string): SensorData[] => {
 
     const values = splitCSVLine(line);
     
-    // Expecting: Timestamp (A), Temperature (B), Humidity (C), Lux (D)
-    if (values.length >= 4) {
+    // Expecting: Timestamp (A), Temp (B), Hum (C), Lux (D), Rain (E), Soil (F), Water (G)
+    if (values.length >= 7) {
       const timestamp = values[0]; 
       const temperature = parseFloat(values[1]);
       const humidity = parseFloat(values[2]);
       const luxRaw = values[3];
       const lux = parseFloat(luxRaw);
+      
+      // New Sensors
+      const rainRaw = parseFloat(values[4]); // E
+      const soilRaw = parseFloat(values[5]); // F (0-4095)
+      const waterRaw = parseFloat(values[6]); // G (Assuming 0-100 or 0-4095)
+
+      // Map Soil (0-4095 to 0-100%)
+      // Note: Usually 4095 is dry and 0 is wet for resistive sensors, but we will follow prompt:
+      // "Map analog 0-4095 to 0-100%" implies 0 is 0% and 4095 is 100%.
+      const soilMoisture = isNaN(soilRaw) ? 0 : Math.min(100, Math.max(0, (soilRaw / 4095) * 100));
+      
+      // Map Water (Assuming 0-100 input, or map from 4095 if analog)
+      // We will assume 0-100 for simplicity unless raw is huge
+      let waterLevel = isNaN(waterRaw) ? 0 : waterRaw;
+      if (waterLevel > 100) {
+          waterLevel = (waterLevel / 4095) * 100; // Fallback mapping if raw analog
+      }
 
       if (!isNaN(temperature) && !isNaN(humidity)) {
         data.push({
@@ -105,7 +122,10 @@ const parseCSV = (csvText: string): SensorData[] => {
           temperature,
           humidity,
           lux: isNaN(lux) ? 0 : lux,
-          fanStatus: globalFanStatus
+          fanStatus: globalFanStatus,
+          rain: isNaN(rainRaw) ? 0 : rainRaw,
+          soilMoisture: Math.round(soilMoisture),
+          waterLevel: Math.round(waterLevel)
         });
       }
     }

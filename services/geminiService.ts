@@ -18,27 +18,24 @@ DO NOT add tables, DO NOT add extra data, DO NOT add "Optimal status" unless ask
 
 **SCENARIOS:**
 
-1.  **SPECIFIC METRIC QUERY (e.g., "What is the temperature?", "Is the fan on?")**
+1.  **SPECIFIC METRIC QUERY (e.g., "What is the temperature?", "Is it raining?")**
     *   **Action:** Provide a **direct, single-sentence answer**.
     *   **FORBIDDEN:** Do NOT generate a table. Do NOT mention other sensors.
     *   **Example:** "<p>The current temperature is <strong>21.1°C</strong>.</p>"
 
 2.  **GENERAL STATUS / REPORT / "HOW IS THE FARM?"**
     *   **Action:** Create a summary table.
-    *   **Example:**
-        \`\`\`html
-        <p>System Status:</p>
-        <table>
-          <thead><tr><th>Metric</th><th>Value</th><th>Status</th></tr></thead>
-          <tbody>
-            <tr><td>Temp</td><td>24°C</td><td>Optimal</td></tr>
-          </tbody>
-        </table>
-        \`\`\`
+
+**CRITICAL RULES & ALERTS:**
+1.  **RAIN ANALYSIS:** If Rain Sensor > 500, user MUST "Adjust solar panels to safe angle (45 degrees)".
+2.  **IRRIGATION ADVICE:** If Soil Moisture < 30% AND Water Level > 20%, suggest "Activate irrigation pump" or "Manual watering".
+3.  **WATER SECURITY:** If Water Tank Level < 10%, issue a **CRITICAL WARNING**: "Low water supply. Refill tank immediately."
+4.  **HEAT WARNING:** If Temp > 35°C, Warn immediately.
 
 **THRESHOLDS:**
 - **Lux:** <1k (Night), 10k-25k (Day/Optimal), >30k (High).
-- **Temp:** >35°C (Danger).
+- **Rain:** >500 (Raining), <500 (Dry).
+- **Soil:** <30% (Dry), 30-70% (Optimal), >70% (Wet).
 `;
 
 let chatInstance: Chat | null = null;
@@ -83,7 +80,7 @@ export const sendMessageToGemini = async (
   const recentHistory = historyContext.slice(-10); // Reduce history to minimize token noise
   
   const historyLog = recentHistory.map(row => 
-    `Time:${row.timestamp}, T:${row.temperature}, H:${row.humidity}, L:${row.lux}, Fan:${row.fanStatus}`
+    `Time:${row.timestamp}, T:${row.temperature}, H:${row.humidity}, Rain:${row.rain}, Soil:${row.soilMoisture}%, Water:${row.waterLevel}%`
   ).join(' | ');
 
   let contextNote = "";
@@ -91,7 +88,15 @@ export const sendMessageToGemini = async (
   if (currentReading) {
     contextNote = `
 [SYSTEM DATA]
-Current: Temp=${currentReading.temperature}, Hum=${currentReading.humidity}, Lux=${currentReading.lux}, Fan=${currentReading.fanStatus}.
+Current: 
+- Temp=${currentReading.temperature}
+- Hum=${currentReading.humidity}
+- Lux=${currentReading.lux}
+- Rain Sensor=${currentReading.rain} (${currentReading.rain > 500 ? 'RAINING' : 'DRY'})
+- Soil Moisture=${currentReading.soilMoisture}%
+- Water Tank=${currentReading.waterLevel}%
+- Fan=${currentReading.fanStatus}
+
 History: ${historyLog}
 (Only use this data if asked. Be brief.)
 `;

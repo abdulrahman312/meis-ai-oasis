@@ -4,6 +4,9 @@ export interface SensorData {
   humidity: number;
   lux: number;
   fanStatus: boolean;
+  rain: number;        // > 500 = Raining
+  soilMoisture: number; // 0-100%
+  waterLevel: number;  // 0-100%
 }
 
 export interface ChatMessage {

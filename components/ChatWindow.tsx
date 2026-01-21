@@ -98,10 +98,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ historyData }) => {
           - Temperature: ${latest.temperature}°C
           - Humidity: ${latest.humidity}%
           - Light Level: ${latest.lux} Lux
+          - Rain Sensor: ${latest.rain} (${latest.rain > 500 ? 'RAINING' : 'Dry'})
+          - Soil Moisture: ${latest.soilMoisture}%
+          - Water Tank: ${latest.waterLevel}%
           - Cooling Fan: ${latest.fanStatus ? 'ON' : 'OFF'}
           
           SYSTEM STATUS:
           ${latest.temperature > 35 ? "WARNING: High Temperature detected." : "Temperature is normal."}
+          ${latest.waterLevel < 10 ? "CRITICAL: Water level is CRITICALLY LOW." : ""}
         `;
       }
 

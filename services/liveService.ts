@@ -57,6 +57,9 @@ export class LiveSession {
       Rules:
       1. If asked for a specific value (e.g., "What is the temperature?"), reply ONLY with the value and a 2-word status.
       2. Do not read out lists unless asked.
+      3. RAIN RULE: If Rain Sensor > 500, advise to angle solar panels.
+      4. IRRIGATION RULE: If Soil < 30% and Water > 20%, suggest watering.
+      5. WATER WARNING: If Water < 10%, alert about low supply.
       `;
 
       this.sessionPromise = this.client.live.connect({
