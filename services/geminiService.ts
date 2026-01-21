@@ -27,6 +27,7 @@ let aiInstance: GoogleGenAI | null = null;
 
 const getAIInstance = () => {
   if (!aiInstance) {
+    // Always use process.env.API_KEY directly when initializing the client.
     aiInstance = new GoogleGenAI({ apiKey: process.env.API_KEY });
   }
   return aiInstance;
@@ -92,7 +93,9 @@ ${historyLog}
     return response.text || "I'm listening, but I couldn't formulate a response right now.";
   } catch (error) {
     console.error("Gemini API Error:", error);
+    // Reset instance in case it was a transient auth error that might be fixed by re-init (unlikely but safe)
     chatInstance = null; 
-    return "I lost connection to the agricultural database. Please try asking again.";
+    aiInstance = null;
+    return "I am unable to connect to the AI network. Please check the system configuration (API Key).";
   }
 };
