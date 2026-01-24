@@ -19,10 +19,16 @@ const AnalysisChatWindow: React.FC<AnalysisChatWindowProps> = ({ fullData }) => 
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  // Ref for the scrollable container
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: "smooth"
+      });
+    }
   };
 
   useEffect(() => {
@@ -113,7 +119,10 @@ const AnalysisChatWindow: React.FC<AnalysisChatWindowProps> = ({ fullData }) => 
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar bg-slate-50">
+      <div 
+        ref={chatContainerRef}
+        className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar bg-slate-50"
+      >
         {messages.map((msg) => (
           <div 
             key={msg.id} 
@@ -149,7 +158,6 @@ const AnalysisChatWindow: React.FC<AnalysisChatWindowProps> = ({ fullData }) => 
             </div>
           </div>
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Input Area */}

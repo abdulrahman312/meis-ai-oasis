@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import Dashboard from './components/Dashboard';
 import ChatWindow from './components/ChatWindow';
+import WeatherWidget from './components/WeatherWidget';
 import AnalysisChatWindow from './components/AnalysisChatWindow';
 import { fetchSheetData } from './services/sheetService';
-import { SensorData, ConnectionStatus } from './types';
+import { fetchRiyadhWeather } from './services/weatherService';
+import { SensorData, ConnectionStatus, WeatherData } from './types';
 
 const App: React.FC = () => {
   const [data, setData] = useState<SensorData[]>([]);
+  const [weather, setWeather] = useState<WeatherData | null>(null);
   const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.CONNECTING);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
@@ -26,13 +29,28 @@ const App: React.FC = () => {
     }
   };
 
+  const fetchWeather = async () => {
+    const wData = await fetchRiyadhWeather();
+    if (wData) setWeather(wData);
+  };
+
   useEffect(() => {
     fetchData();
+    fetchWeather(); // Fetch weather on mount
+
     const intervalId = setInterval(() => {
       fetchData();
     }, 5000); // 5 seconds polling
 
-    return () => clearInterval(intervalId);
+    // Poll weather every 10 mins
+    const weatherInterval = setInterval(() => {
+      fetchWeather();
+    }, 600000); 
+
+    return () => {
+      clearInterval(intervalId);
+      clearInterval(weatherInterval);
+    };
   }, []);
 
   const latestData = data.length > 0 ? data[data.length - 1] : null;
@@ -99,22 +117,30 @@ const App: React.FC = () => {
       {/* Main Container - Padded for Header and Footer */}
       <div className="pt-[110px] pb-[70px] flex-1 max-w-[1920px] mx-auto w-full px-4 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* LEFT: FIXED Chat Window */}
+        {/* LEFT: FIXED SIDEBAR (Split: Chat + Weather) */}
         <div className="hidden lg:block lg:col-span-3">
-            {/* 
-                We use sticky here with a defined height that accounts for header and footer.
-                Top is 116px (100px header + 16px gap).
-                Height is calc(100vh - 116px - 70px footer - 16px gap) 
-            */}
-           <aside className="sticky top-[116px] h-[calc(100vh-200px)] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl shadow-sadu-sand/20 overflow-hidden border border-white flex flex-col">
-             <ChatWindow historyData={data} />
+           <aside className="sticky top-[116px] h-[calc(100vh-200px)] flex flex-col gap-6">
+             
+             {/* Top Half: Chat Window (Takes ~60%) */}
+             <div className="flex-[0.6] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl shadow-sadu-sand/20 overflow-hidden border border-white flex flex-col min-h-0">
+               <ChatWindow historyData={data} weatherData={weather} />
+             </div>
+
+             {/* Bottom Half: Weather Widget (Takes ~40%) */}
+             <div className="flex-[0.4] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl shadow-sadu-sand/20 overflow-hidden border border-white">
+                <WeatherWidget data={weather} />
+             </div>
+
            </aside>
         </div>
 
-        {/* Mobile Chat View (Stacked) */}
-        <div className="lg:hidden h-[500px]">
-           <div className="h-full bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden border border-white flex flex-col">
-             <ChatWindow historyData={data} />
+        {/* Mobile View (Stacked) */}
+        <div className="lg:hidden flex flex-col gap-6">
+           <div className="h-[500px] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden border border-white flex flex-col">
+             <ChatWindow historyData={data} weatherData={weather} />
+           </div>
+           <div className="h-[250px] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden border border-white">
+              <WeatherWidget data={weather} />
            </div>
         </div>
 

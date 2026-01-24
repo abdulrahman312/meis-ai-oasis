@@ -1,5 +1,5 @@
 import { GoogleGenAI, Chat, HarmCategory, HarmBlockThreshold, FunctionDeclaration, Type } from "@google/genai";
-import { SensorData } from "../types";
+import { SensorData, WeatherData } from "../types";
 import { toggleFanControl } from "./sheetService";
 
 const SYSTEM_INSTRUCTION = `
@@ -12,12 +12,17 @@ You have the ability to control the **Climate Control Fan** using the \`controlF
 You must provide **SHORT, CONCISE** responses by default.
 **DO NOT** provide a list of sensor readings unless explicitly asked.
 
+**DATA PRIORITIZATION RULES (CRITICAL):**
+1. **Generic Questions:** If the user asks about "temperature", "humidity", or "weather" WITHOUT specifying a location, **YOU MUST USE THE [SYSTEM DATA] (FARM SENSORS)**.
+2. **Specific Location:** ONLY use the [EXTERNAL RIYADH WEATHER DATA] if the user explicitly asks for "Riyadh", "Outside", "City weather", or "External forecast".
+3. **Never Mix:** Do not confuse farm sensor data with city weather data.
+
 **RESPONSE GUIDELINES:**
 
 1.  **DEFAULT RESPONSE (Short & Direct):**
     *   **Length:** Keep it under 30 words.
     *   **Actions:** If you perform an action (like turning off the fan), simply confirm the action. Do NOT list temperature, humidity, etc.
-    *   **Questions:** Answer only the specific metric asked (e.g., if asked for Humidity, do not mention Temperature).
+    *   **Questions:** Answer only the specific metric asked.
     *   **Format:** Use a single <p> tag.
 
 2.  **DETAILED RESPONSE (Only when asked to "Explain", "Analyze", or "Report"):**
@@ -118,7 +123,8 @@ export const initializeAnalysisChat = (): Chat => {
 
 export const sendMessageToGemini = async (
   message: string, 
-  historyContext: SensorData[]
+  historyContext: SensorData[],
+  weatherData: WeatherData | null
 ): Promise<string> => {
   if (!chatInstance) {
     initializeChat();
@@ -136,9 +142,21 @@ export const sendMessageToGemini = async (
 
   let contextNote = "";
   
+  // Construct Weather Context Block
+  const weatherBlock = weatherData ? `
+[EXTERNAL RIYADH WEATHER DATA] (Use ONLY if asked about "Riyadh" or "City"):
+- City: Riyadh
+- Condition: ${weatherData.condition} (${weatherData.description})
+- Temp: ${weatherData.temp}°C (Feels like ${weatherData.feelsLike}°C)
+- Humidity: ${weatherData.humidity}%
+- Wind: ${weatherData.windSpeed} m/s
+` : '[EXTERNAL WEATHER UNAVAILABLE]';
+
   if (currentReading) {
     contextNote = `
-[SYSTEM DATA]
+${weatherBlock}
+
+[SYSTEM DATA] (Use this for "Temperature", "Humidity", "Status" by default):
 Current: 
 - Temp=${currentReading.temperature}
 - Hum=${currentReading.humidity}
@@ -152,7 +170,7 @@ History: ${historyLog}
 (Only use this data if asked. Be brief.)
 `;
   } else {
-    contextNote = `[SYSTEM DATA] No live data available.`;
+    contextNote = `${weatherBlock}\n[SYSTEM DATA] No live sensor data available.`;
   }
   
   const prompt = `${contextNote}\n\nUser Question: "${message}"`;

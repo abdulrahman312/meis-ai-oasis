@@ -9,6 +9,16 @@ export interface SensorData {
   waterLevel: number;  // 0-100%
 }
 
+export interface WeatherData {
+  temp: number;
+  condition: string;
+  description: string;
+  humidity: number;
+  windSpeed: number;
+  icon: string;
+  feelsLike: number;
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'model';
