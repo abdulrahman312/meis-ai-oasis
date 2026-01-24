@@ -1,4 +1,5 @@
-import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
+import { GoogleGenAI, LiveServerMessage, Modality, FunctionDeclaration, Type } from "@google/genai";
+import { toggleFanControl } from "./sheetService";
 
 // Target Audio Configuration for Gemini Live API
 const TARGET_SAMPLE_RATE = 16000;
@@ -6,6 +7,21 @@ const TARGET_SAMPLE_RATE = 16000;
 export type TranscriptionCallback = (role: 'user' | 'model', text: string, isTurnComplete: boolean) => void;
 export type StatusCallback = (isConnected: boolean) => void;
 export type VolumeCallback = (volume: number) => void;
+
+const controlFanTool: FunctionDeclaration = {
+  name: "controlFan",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      enable: {
+        type: Type.BOOLEAN,
+        description: "Set to TRUE to turn the fan ON (Activate), FALSE to turn it OFF (Deactivate)."
+      }
+    },
+    required: ["enable"]
+  },
+  description: "Controls the Climate Control Unit (Fan) state."
+};
 
 export class LiveSession {
   private client: GoogleGenAI;
@@ -60,6 +76,7 @@ export class LiveSession {
       3. RAIN RULE: If Rain Sensor > 500, advise to angle solar panels.
       4. IRRIGATION RULE: If Soil < 30% and Water > 20%, suggest watering.
       5. WATER WARNING: If Water < 10%, alert about low supply.
+      6. CONTROL: You can control the Fan using the \`controlFan\` tool if requested.
       `;
 
       this.sessionPromise = this.client.live.connect({
@@ -70,6 +87,7 @@ export class LiveSession {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } },
           },
           systemInstruction: fullSystemInstruction,
+          tools: [{ functionDeclarations: [controlFanTool] }],
           inputAudioTranscription: {}, 
           outputAudioTranscription: {},
         },
@@ -177,6 +195,39 @@ export class LiveSession {
 
   private async handleMessage(message: LiveServerMessage) {
     const content = message.serverContent;
+    
+    // 0. Handle Function Calls (Tool Usage)
+    if (message.toolCall) {
+        console.log(">> Received Tool Call:", message.toolCall);
+        const responses = [];
+        
+        for (const fc of message.toolCall.functionCalls) {
+            if (fc.name === 'controlFan') {
+                const args = fc.args as { enable: boolean };
+                console.log(`[VOICE CMD] Toggle Fan: ${args.enable}`);
+                
+                // Execute logic
+                const success = await toggleFanControl(args.enable);
+                
+                responses.push({
+                    id: fc.id,
+                    name: fc.name,
+                    response: { 
+                        result: success ? 'OK' : 'Error',
+                        status: args.enable ? 'ON' : 'OFF'
+                    }
+                });
+            }
+        }
+        
+        // Send response back to model so it can confirm vocally
+        if (responses.length > 0) {
+            this.sessionPromise!.then(session => {
+                session.sendToolResponse({ functionResponses: responses });
+            });
+        }
+    }
+
     if (!content) return;
 
     // 1. Handle Audio Output
