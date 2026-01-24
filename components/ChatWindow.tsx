@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Mic, MicOff, X } from 'lucide-react'; 
+import { Send, Mic, MicOff, X, Bot } from 'lucide-react'; 
 import { ChatMessage, SensorData, WeatherData } from '../types';
 import { sendMessageToGemini } from '../services/geminiService';
 import { LiveSession } from '../services/liveService';
@@ -177,8 +177,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ historyData, weatherData }) => 
       <div className="h-2 w-full bg-gradient-to-r from-sadu-red via-sadu-dark to-sadu-oasis"></div>
 
       {/* Chat Header - Compact */}
-      <div className="p-3 border-b border-gray-100 bg-white flex items-center justify-between sticky top-0 z-10 shrink-0">
-        <h2 className="text-lg font-black animate-sadu-glow flex-1 text-center leading-tight">
+      <div className="p-3 border-b border-gray-100 bg-white flex items-center gap-2 sticky top-0 z-10 shrink-0">
+        <Bot className="text-sadu-dark" size={20} />
+        <h2 className="text-lg font-black animate-sadu-glow flex-1 text-left leading-tight">
           Chat with AI Scientist
         </h2>
         {/* Voice Indicator for Header */}

@@ -82,7 +82,7 @@ const AnalysisChatWindow: React.FC<AnalysisChatWindowProps> = ({ fullData }) => 
   };
 
   return (
-    <div className="flex flex-col h-full bg-white relative rounded-3xl overflow-hidden border border-sadu-oasis/20 shadow-lg">
+    <div className="flex flex-col h-full bg-white relative rounded-3xl overflow-hidden shadow-lg">
       
       {/* Decorative Top Border - Teal/Blue for Analysis */}
       <div className="h-2 w-full bg-gradient-to-r from-blue-600 via-sadu-oasis to-teal-400"></div>
@@ -96,7 +96,7 @@ const AnalysisChatWindow: React.FC<AnalysisChatWindowProps> = ({ fullData }) => 
                 <BarChart3 className="text-blue-700" size={28} />
             </div>
             <div className="flex flex-col">
-                <h2 className="text-2xl font-black text-sadu-dark tracking-tight leading-none">Data Analyst AI</h2>
+                <h2 className="text-2xl font-black tracking-tight leading-none animate-sadu-glow">Data Analyst AI</h2>
                 <span className="text-xs font-bold text-blue-600/60 uppercase tracking-wide mt-1">Full History Access</span>
             </div>
         </div>

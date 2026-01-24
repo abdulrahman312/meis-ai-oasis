@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Gauge from './Gauge';
 import { SensorData, ConnectionStatus } from '../types';
-import { Fan, Power, CloudRain, Sun, Droplets } from 'lucide-react';
+import { Fan, Power, CloudRain, Sun, Droplets, LayoutDashboard } from 'lucide-react';
 import { toggleFanControl } from '../services/sheetService';
 
 interface DashboardProps {
@@ -60,7 +60,10 @@ const Dashboard: React.FC<DashboardProps> = ({ latestData, status, lastUpdated }
       {/* Dashboard Header */}
       <div className="flex items-end justify-between border-b-2 border-sadu-sand/30 pb-4">
         <div>
-          <h2 className="text-4xl md:text-5xl font-black text-sadu-dark tracking-tight">System Overview</h2>
+          <div className="flex items-center gap-3">
+             <LayoutDashboard className="text-sadu-dark animate-pulse" size={40} />
+             <h2 className="text-4xl md:text-5xl font-black tracking-tight animate-sadu-glow">System Overview</h2>
+          </div>
           <div className="flex items-center gap-3 mt-3">
              <div className={`w-3 h-3 rounded-full ${status === ConnectionStatus.CONNECTED ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500'}`}></div>
              <span className="text-base font-bold text-gray-500 uppercase tracking-widest">

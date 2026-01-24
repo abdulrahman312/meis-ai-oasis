@@ -122,12 +122,12 @@ const App: React.FC = () => {
            <aside className="sticky top-[116px] h-[calc(100vh-200px)] flex flex-col gap-6">
              
              {/* Top Half: Chat Window (Takes ~60%) */}
-             <div className="flex-[0.6] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl shadow-sadu-sand/20 overflow-hidden border border-white flex flex-col min-h-0">
+             <div className="flex-[0.6] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden glow-border flex flex-col min-h-0">
                <ChatWindow historyData={data} weatherData={weather} />
              </div>
 
              {/* Bottom Half: Weather Widget (Takes ~40%) */}
-             <div className="flex-[0.4] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl shadow-sadu-sand/20 overflow-hidden border border-white">
+             <div className="flex-[0.4] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden glow-border">
                 <WeatherWidget data={weather} />
              </div>
 
@@ -136,10 +136,10 @@ const App: React.FC = () => {
 
         {/* Mobile View (Stacked) */}
         <div className="lg:hidden flex flex-col gap-6">
-           <div className="h-[500px] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden border border-white flex flex-col">
+           <div className="h-[500px] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden glow-border flex flex-col">
              <ChatWindow historyData={data} weatherData={weather} />
            </div>
-           <div className="h-[250px] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden border border-white">
+           <div className="h-[250px] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden glow-border">
               <WeatherWidget data={weather} />
            </div>
         </div>
@@ -148,7 +148,7 @@ const App: React.FC = () => {
         <main className="lg:col-span-9 flex flex-col gap-8">
           
           {/* Section 1: System Overview (Dashboard) */}
-          <div className="bg-white/60 backdrop-blur-md rounded-3xl shadow-2xl shadow-sadu-sand/20 overflow-hidden border border-white/50 p-6 lg:p-10 relative flex flex-col justify-center min-h-[600px]">
+          <div className="bg-white/60 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden glow-border p-6 lg:p-10 relative flex flex-col justify-center min-h-[600px]">
             <div className="absolute top-0 right-0 w-96 h-96 bg-sadu-sand/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-sadu-oasis/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
             
@@ -160,7 +160,7 @@ const App: React.FC = () => {
           </div>
 
           {/* Section 2: Data Analysis AI */}
-          <div className="h-[600px]">
+          <div className="h-[600px] glow-border rounded-3xl overflow-hidden">
              <AnalysisChatWindow fullData={data} />
           </div>
 

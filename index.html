@@ -77,20 +77,33 @@
       @keyframes sadu-glow-text {
         0% { 
           color: #C04A41; /* Sadu Red */
-          text-shadow: 0 0 15px rgba(192, 74, 65, 0.6); 
+          text-shadow: 0 0 15px rgba(192, 74, 65, 0.4); 
         }
         33% { 
           color: #006B5F; /* Sadu Oasis (Teal) */
-          text-shadow: 0 0 15px rgba(0, 107, 95, 0.6); 
+          text-shadow: 0 0 15px rgba(0, 107, 95, 0.4); 
         }
         66% { 
           color: #D4AF37; /* Sadu Gold */
-          text-shadow: 0 0 15px rgba(212, 175, 55, 0.6); 
+          text-shadow: 0 0 15px rgba(212, 175, 55, 0.4); 
         }
         100% { 
           color: #C04A41; /* Back to Red */
-          text-shadow: 0 0 15px rgba(192, 74, 65, 0.6); 
+          text-shadow: 0 0 15px rgba(192, 74, 65, 0.4); 
         }
+      }
+
+      /* Animated Glowing Border for Sections */
+      @keyframes glow-border-pulse {
+        0% { border-color: #E6DCC3; box-shadow: 0 0 5px rgba(230, 220, 195, 0.3); }
+        50% { border-color: #D4AF37; box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
+        100% { border-color: #E6DCC3; box-shadow: 0 0 5px rgba(230, 220, 195, 0.3); }
+      }
+
+      .glow-border {
+        border-width: 2px;
+        border-style: solid;
+        animation: glow-border-pulse 4s infinite ease-in-out;
       }
 
       .animate-sadu-glow {
