@@ -114,12 +114,12 @@ const Dashboard: React.FC<DashboardProps> = ({ latestData, status, lastUpdated }
              />
           </div>
 
-          {/* Lux */}
+          {/* Lux - Updated Max to 40000 */}
           <div className="flex flex-col items-center justify-center">
              <Gauge 
                value={lux} 
                min={0} 
-               max={70000} 
+               max={40000} 
                label="Sunlight" 
                unit="lx" 
                color={getColor(lux, 'lux')} 

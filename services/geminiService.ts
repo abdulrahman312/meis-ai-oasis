@@ -17,6 +17,13 @@ You must provide **SHORT, CONCISE** responses by default.
 2. **Specific Location:** ONLY use the [EXTERNAL RIYADH WEATHER DATA] if the user explicitly asks for "Riyadh", "Outside", "City weather", or "External forecast".
 3. **Never Mix:** Do not confuse farm sensor data with city weather data.
 
+**SOLAR ENERGY LOGIC:**
+- **Lux (Light Level)** directly measures **Sunlight** and solar panel efficiency.
+- **> 25,000 lx:** High solar energy generation (Peak).
+- **10,000 - 25,000 lx:** Moderate energy generation.
+- **< 10,000 lx:** Low energy generation (Cloudy or Evening).
+- If asked about "Solar Panels", "Energy", or "Power", **always** analyze the current Lux value to provide the answer.
+
 **RESPONSE GUIDELINES:**
 
 1.  **DEFAULT RESPONSE (Short & Direct):**
@@ -48,7 +55,8 @@ Analyze trends, compare data points, and generate detailed reports.
 **GUIDELINES:**
 1. **COMPARISONS:** When asked to compare (e.g., "Compare temperature changes"), ALWAYS create a **HTML Table**.
 2. **TRENDS:** Look for patterns in the provided CSV data (e.g., "Temperature rises at noon").
-3. **FORMATTING:** 
+3. **SOLAR/LUX:** Correlate Lux values to Solar Panel output (High Lux = High Power).
+4. **FORMATTING:** 
    - Use <table> for data presentation.
    - Use <ul> for insights.
    - Use <strong> for key findings.
@@ -137,7 +145,7 @@ export const sendMessageToGemini = async (
   const recentHistory = historyContext.slice(-10); // Reduce history to minimize token noise
   
   const historyLog = recentHistory.map(row => 
-    `Time:${row.timestamp}, T:${row.temperature}, H:${row.humidity}, Rain:${row.rain}, Soil:${row.soilMoisture}%, Water:${row.waterLevel}%`
+    `Time:${row.timestamp}, T:${row.temperature}, H:${row.humidity}, Rain:${row.rain}, Lux:${row.lux}, Soil:${row.soilMoisture}%, Water:${row.waterLevel}%`
   ).join(' | ');
 
   let contextNote = "";
@@ -160,7 +168,7 @@ ${weatherBlock}
 Current: 
 - Temp=${currentReading.temperature}
 - Hum=${currentReading.humidity}
-- Lux=${currentReading.lux}
+- Lux (Sunlight)=${currentReading.lux}
 - Rain Sensor=${currentReading.rain} (${currentReading.rain > 500 ? 'RAINING' : 'DRY'})
 - Soil Moisture=${currentReading.soilMoisture}%
 - Water Tank=${currentReading.waterLevel}%
