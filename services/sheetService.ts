@@ -2,12 +2,12 @@
 import { SensorData } from '../types';
 
 // The Google Sheet ID
-const SHEET_ID = '1CspjxgMKFJYDSUiIhV6lDsHHcslhhWaqdiKz5nQK05E';
+const SHEET_ID = '1MG7WQWrKBBms2PUKckKWSjLqMknzVhSCJphqyjS1e1c';
 
 // ---------------------------------------------------------------------------
 // Google Apps Script Web App URL (For Control)
 // ---------------------------------------------------------------------------
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxWS4G-K5YLP2RHC6MST3GgexjaS5XT1hOWRcwPzrZiJTbg6V_kFoQMgIbwA-hDpM4J/exec'; 
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzd9Oe8DmQIDClcfDAq4ZBI0DDHf_US9n44Wrc7wlf6__UipppYEWccK6Mjg9bWIXNY/exec'; 
 
 // We switch to the 'gviz' endpoint which supports CORS natively.
 const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
