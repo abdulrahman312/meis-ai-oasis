@@ -9,18 +9,13 @@ const SHEET_ID = '1CspjxgMKFJYDSUiIhV6lDsHHcslhhWaqdiKz5nQK05E';
 // ---------------------------------------------------------------------------
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxWS4G-K5YLP2RHC6MST3GgexjaS5XT1hOWRcwPzrZiJTbg6V_kFoQMgIbwA-hDpM4J/exec'; 
 
-// We switch to the 'export' endpoint which is often more reliable for CORS proxies 
-// in production environments compared to the 'gviz' endpoint.
-const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
-const PROXY_BASE = `https://corsproxy.io/?`;
+// We switch to the 'gviz' endpoint which supports CORS natively.
+const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
 
 export const fetchSheetData = async (): Promise<SensorData[]> => {
   try {
     // Construct the URL with a cache buster parameter to bypass CDN caching
-    const sheetUrl = `${GOOGLE_SHEET_URL}&cachebust=${Date.now()}`;
-    
-    // Use corsproxy.io to bypass CORS headers issue in the browser.
-    const finalUrl = `${PROXY_BASE}${encodeURIComponent(sheetUrl)}`;
+    const finalUrl = `${GOOGLE_SHEET_URL}&cachebust=${Date.now()}`;
 
     const response = await fetch(finalUrl, {
       method: 'GET',
